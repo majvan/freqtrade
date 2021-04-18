@@ -244,6 +244,11 @@ class Telegram(RPCHandler):
         elif msg['type'] == RPCMessageType.STARTUP_NOTIFICATION:
             message = '{status}'.format(**msg)
 
+        elif msg['type'] == RPCMessageType.INFO_NOTIFICATION:
+            message = ('\N{INFORMATION SOURCE} *Info:* \n'
+                      '{pair} \n'
+                      '{msg}').format(**msg)
+
         else:
             raise NotImplementedError('Unknown message type: {}'.format(msg['type']))
 

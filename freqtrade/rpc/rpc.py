@@ -37,6 +37,7 @@ class RPCMessageType(Enum):
     BUY_CANCEL_NOTIFICATION = 'buy_cancel'
     SELL_NOTIFICATION = 'sell'
     SELL_CANCEL_NOTIFICATION = 'sell_cancel'
+    INFO_NOTIFICATION = 'info'
 
     def __repr__(self):
         return self.value
