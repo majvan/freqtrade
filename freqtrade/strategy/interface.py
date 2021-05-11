@@ -646,7 +646,8 @@ class IStrategy(ABC, HyperStrategyMixin):
             else:
                 logger.warning("CustomStoploss function did not return valid stoploss")
 
-        if self.trailing_stop:
+        # If the stoploss was not reached yet, then try trailing stoploss
+        if self.trailing_stop and trade.stop_loss < current_rate:
             # trailing stoploss handling
             sl_offset = self.trailing_stop_positive_offset
 
