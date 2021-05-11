@@ -220,6 +220,7 @@ class LocalTrade():
     fee_close: float = 0.0
     fee_close_cost: Optional[float] = None
     fee_close_currency: str = ''
+    profit_adjust: float = 0.0
     open_rate: float = 0.0
     open_rate_requested: Optional[float] = None
     # open_trade_value - calculated via _calc_open_trade_value
@@ -292,6 +293,7 @@ class LocalTrade():
             'fee_close': self.fee_close,
             'fee_close_cost': self.fee_close_cost,
             'fee_close_currency': self.fee_close_currency,
+            'profit_adjust': self.profit_adjust,
 
             'open_date': self.open_date.strftime(DATETIME_PRINT_FORMAT),
             'open_timestamp': int(self.open_date.replace(tzinfo=timezone.utc).timestamp() * 1000),
@@ -518,26 +520,31 @@ class LocalTrade():
         return float(sell_trade - fees)
 
     def calc_profit(self, rate: Optional[float] = None,
-                    fee: Optional[float] = None) -> float:
+                    fee: Optional[float] = None,
+                    profit_adjust: Optional[float] = None) -> float:
         """
         Calculate the absolute profit in stake currency between Close and Open trade
         :param fee: fee to use on the close rate (optional).
             If rate is not set self.fee will be used
         :param rate: close rate to compare with (optional).
             If rate is not set self.close_rate will be used
+        :param profit_adjust: adjustment of profit (optional).
+            If backtesting shows a bit lower results than run.
         :return:  profit in stake currency as float
         """
         close_trade_value = self.calc_close_trade_value(
             rate=(rate or self.close_rate),
             fee=(fee or self.fee_close)
         )
-        profit = close_trade_value - self.open_trade_value
+        adjustment = (rate or self.close_rate) * (profit_adjust or self.profit_adjust or 0)
+        profit = close_trade_value + adjustment - self.open_trade_value
         return float(f"{profit:.8f}")
 
     def calc_profit_ratio(self, rate: Optional[float] = None,
-                          fee: Optional[float] = None) -> float:
+                          fee: Optional[float] = None,
+                          profit_adjust: Optional[float] = None) -> float:
         """
-        Calculates the profit as ratio (including fee).
+        Calculates the profit as ratio (including fee and adjustment).
         :param rate: rate to compare with (optional).
             If rate is not set self.close_rate will be used
         :param fee: fee to use on the close rate (optional).
@@ -545,11 +552,12 @@ class LocalTrade():
         """
         close_trade_value = self.calc_close_trade_value(
             rate=(rate or self.close_rate),
-            fee=(fee or self.fee_close)
+            fee=(fee or self.fee_close),
         )
         if self.open_trade_value == 0.0:
             return 0.0
-        profit_ratio = (close_trade_value / self.open_trade_value) - 1
+        adjustment = (rate or self.close_rate) * (profit_adjust or self.profit_adjust or 0)
+        profit_ratio = ((close_trade_value + adjustment) / self.open_trade_value) - 1
         return float(f"{profit_ratio:.8f}")
 
     def select_order(self, order_side: str, is_open: Optional[bool]) -> Optional[Order]:
@@ -665,6 +673,7 @@ class Trade(_DECL_BASE, LocalTrade):
     fee_close = Column(Float, nullable=False, default=0.0)
     fee_close_cost = Column(Float, nullable=True)
     fee_close_currency = Column(String, nullable=True)
+    profit_adjust: Column(Float, nullable=True, default=0.0)
     open_rate = Column(Float)
     open_rate_requested = Column(Float)
     # open_trade_value - calculated via _calc_open_trade_value

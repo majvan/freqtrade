@@ -101,6 +101,7 @@ class IStrategy(ABC, HyperStrategyMixin):
     trailing_stop_positive_offset: float = 0.0
     trailing_only_offset_is_reached = False
     use_custom_stoploss: bool = False
+    profit_adjust = 0.0
 
     # associated timeframe
     ticker_interval: str  # DEPRECATED

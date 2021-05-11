@@ -81,6 +81,7 @@ class Backtesting:
             raise OperationalException("Timeframe (ticker interval) needs to be set in either "
                                        "configuration or as cli argument `--timeframe 5m`")
         self.timeframe = str(self.config.get('timeframe'))
+        self.profit_adjust = self.config.get('profit_adjust', 0)
         self.timeframe_min = timeframe_to_minutes(self.timeframe)
 
         self.pairlists = PairListManager(self.exchange, self.config)
@@ -304,6 +305,7 @@ class Backtesting:
                 amount=round(stake_amount / row[OPEN_IDX], 8),
                 fee_open=self.fee,
                 fee_close=self.fee,
+                profit_adjust=self.profit_adjust,
                 is_open=True,
                 exchange='backtesting',
             )
