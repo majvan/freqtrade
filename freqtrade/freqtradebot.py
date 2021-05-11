@@ -186,8 +186,18 @@ class FreqtradeBot(LoggingMixin):
         # Then looking for buy opportunities
         if self.get_free_open_trades():
             self.enter_positions()
+        self.get_rpc_notifications()
 
         Trade.query.session.flush()
+
+    def get_rpc_notifications(self):
+        whitelist = copy.deepcopy(self.active_pair_whitelist)
+        for pair in whitelist:
+            analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(pair, self.strategy.timeframe)
+            if 'rpc_msg' in analyzed_df.columns:
+                message = analyzed_df.iloc[-1]['rpc_msg'] if len(analyzed_df) > 0 else None
+                self._notify_msg(pair, message)
+
 
     def process_stopped(self) -> None:
         """
@@ -627,6 +637,21 @@ class FreqtradeBot(LoggingMixin):
         self._notify_buy(trade, order_type)
 
         return True
+
+    def _notify_msg(self, pair: str, msg: str) -> None:
+        """
+        Sends rpc notification when strategy wants to inform.
+        """
+        msg = {
+            'msg': msg,
+            'type': RPCMessageType.INFO_NOTIFICATION,
+            'exchange': self.exchange.name.capitalize(),
+            'pair': pair,
+            'date': datetime.utcnow(),
+        }
+
+        # Send the message
+        self.rpc.send_msg(msg)
 
     def _notify_buy(self, trade: Trade, order_type: str) -> None:
         """

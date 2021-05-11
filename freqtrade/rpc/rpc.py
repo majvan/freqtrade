@@ -40,6 +40,7 @@ class RPCMessageType(Enum):
     SELL = 'sell'
     SELL_FILL = 'sell_fill'
     SELL_CANCEL = 'sell_cancel'
+    INFO_NOTIFICATION = 'info'
 
     def __repr__(self):
         return self.value
